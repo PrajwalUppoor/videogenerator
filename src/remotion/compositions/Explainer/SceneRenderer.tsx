@@ -11,13 +11,15 @@ export const SceneRenderer = ({
 }) => {
     switch (scene.type) {
         case "text":
-            return <TextScene text={scene.text} theme={theme} />;
+            return <TextScene text={scene.text} lyrics={scene.lyrics} theme={theme} />;
         case "image-text":
             return (
                 <ImageTextScene
                     text={scene.text}
+                    lyrics={scene.lyrics}
                     imageUrl={scene.imageUrl!}
                     theme={theme}
+                    layout={scene.layout}
                 />
             );
         default:

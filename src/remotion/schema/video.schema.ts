@@ -1,10 +1,27 @@
 import { z } from "zod";
 
 export const SceneSchema = z.object({
-  type: z.enum(["text", "image-text"]),
+  type: z.enum(["text", "image-text", "video-comparison"]),
   text: z.string(),
+  lyrics: z.string().optional(),
   imageUrl: z.string().optional(),
-  duration: z.number().min(1.5).max(30), // Adjusted based on latest prompt rules
+  videoUrl1: z.string().optional(),
+  videoUrl1Offset: z.number().default(0),
+  videoUrl2: z.string().optional(),
+  videoUrl2Offset: z.number().default(0),
+  videoUrl3: z.string().optional(),
+  videoUrl3Offset: z.number().default(0),
+  splitPosition: z.number().min(0).max(100).default(50),
+  mode: z.enum(["split", "alternate", "interleave", "manual"]).default("split"),
+  switchInterval: z.number().min(0.1).default(1),
+  timeline: z.array(z.object({
+    video: z.number().min(1).max(3),
+    duration: z.number().min(0.1),
+    offset: z.number().optional()
+  })).optional(),
+  videoFit: z.enum(["cover", "contain"]).default("cover"),
+  duration: z.number().min(1.5).max(600),
+  layout: z.enum(["standard", "full-screen"]).default("standard"),
 });
 
 export const VideoSchema = z.object({

@@ -3,12 +3,17 @@ import { create } from 'zustand';
 interface Scene {
     type: 'text' | 'image-text';
     text: string;
+    lyrics?: string;
     imageUrl?: string;
     duration: number;
+    layout?: 'standard' | 'full-screen';
 }
 
 interface VideoData {
     title: string;
+    audioUrl?: string;
+    width: number;
+    height: number;
     scenes: Scene[];
     theme: {
         background: string;
@@ -28,8 +33,10 @@ interface EditorState {
 export const useEditorStore = create<EditorState>((set) => ({
     videoData: {
         title: 'My Awesome Video',
+        width: 1080,
+        height: 1920,
         scenes: [
-            { type: 'text', text: 'Hook your audience here!', duration: 3 },
+            { type: 'text', text: 'Hook your audience here!', duration: 3, layout: 'standard' },
         ],
         theme: {
             background: '#0f172a',
@@ -48,7 +55,7 @@ export const useEditorStore = create<EditorState>((set) => ({
     addScene: () => set((state) => ({
         videoData: {
             ...state.videoData,
-            scenes: [...state.videoData.scenes, { type: 'text', text: 'New Scene', duration: 3 }]
+            scenes: [...state.videoData.scenes, { type: 'text', text: 'New Scene', duration: 3, layout: 'standard' }]
         }
     })),
     removeScene: (index) => set((state) => ({
