@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Remotion Studio - Video Creation Platform</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Syne', sans-serif;
+      background: #0a0a0a;
+      color: #ffffff;
+      overflow-x: hidden;
+    }
+    
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    
+    /* Grain overlay texture */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.03;
+      z-index: 1;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+    
+    .gradient-border {
+      position: relative;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+      border: 1px solid transparent;
+    }
+    
+    .gradient-border::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, #ff3366, #6366f1, #00d4ff);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0.3;
+    }
+    
+    .glow-text {
+      text-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.2); }
+      50% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.4); }
+    }
+    
+    .animate-float {
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    .hover-lift {
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
+    }
+    
+    .hover-lift:hover {
+      transform: translateY(-4px);
+    }
+    
+    .glass {
+      background: rgba(26, 26, 26, 0.6);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .gradient-text {
+      background: linear-gradient(135deg, #ff3366, #6366f1, #00d4ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #0a0a0a;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // Icons as components
+    const PlayIcon = () => (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    );
+
+    const PlusIcon = () => (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+      </svg>
+    );
+
+    const TemplateIcon = () => (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" />
+      </svg>
+    );
+
+    const DownloadIcon = () => (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+      </svg>
+    );
+
+    const EditIcon = () => (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+      </svg>
+    );
+
+    const SparklesIcon = () => (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+      </svg>
+    );
+
+    const templates = [
+      {
+        id: 1,
+        name: "Social Media Burst",
+        category: "Social",
+        duration: "10s",
+        thumbnail: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        status: "ready"
+      },
+      {
+        id: 2,
+        name: "Product Showcase",
+        category: "Commercial",
+        duration: "15s",
+        thumbnail: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+        status: "ready"
+      },
+      {
+        id: 3,
+        name: "Text Animator Pro",
+        category: "Typography",
+        duration: "8s",
+        thumbnail: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+        status: "ready"
+      },
+      {
+        id: 4,
+        name: "Brand Story",
+        category: "Corporate",
+        duration: "20s",
+        thumbnail: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+        status: "ready"
+      },
+      {
+        id: 5,
+        name: "Promo Blast",
+        category: "Marketing",
+        duration: "12s",
+        thumbnail: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+        status: "ready"
+      },
+      {
+        id: 6,
+        name: "Tutorial Intro",
+        category: "Educational",
+        duration: "6s",
+        thumbnail: "linear-gradient(135deg, #30cfd0 0%, #330867 100%)",
+        status: "ready"
+      }
+    ];
+
+    const projects = [
+      {
+        id: 1,
+        name: "Q1 Product Launch",
+        template: "Product Showcase",
+        status: "completed",
+        thumbnail: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+        updatedAt: "2 hours ago",
+        duration: "15s"
+      },
+      {
+        id: 2,
+        name: "Instagram Story - Summer",
+        template: "Social Media Burst",
+        status: "rendering",
+        thumbnail: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        updatedAt: "5 mins ago",
+        progress: 67,
+        duration: "10s"
+      },
+      {
+        id: 3,
+        name: "Brand Guidelines Video",
+        template: "Brand Story",
+        status: "draft",
+        thumbnail: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+        updatedAt: "Yesterday",
+        duration: "20s"
+      }
+    ];
+
+    function App() {
+      const [activeTab, setActiveTab] = useState('projects');
+      const [selectedCategory, setSelectedCategory] = useState('All');
+      
+      const categories = ['All', 'Social', 'Commercial', 'Typography', 'Corporate', 'Marketing', 'Educational'];
+      
+      const filteredTemplates = selectedCategory === 'All' 
+        ? templates 
+        : templates.filter(t => t.category === selectedCategory);
+
+      return (
+        <div className="min-h-screen relative z-10">
+          {/* Header */}
+          <header className="glass border-b border-white/5 sticky top-0 z-50">
+            <div className="max-w-7xl mx-auto px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-lg flex items-center justify-center">
+                    <PlayIcon />
+                  </div>
+                  <div>
+                    <h1 className="text-xl font-bold gradient-text">Remotion Studio</h1>
+                    <p className="text-xs text-gray-500 mono">v2.0.1</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-4">
+                  <div className="hidden md:flex items-center gap-2 px-4 py-2 glass rounded-lg">
+                    <SparklesIcon />
+                    <span className="mono text-sm">23 credits</span>
+                  </div>
+                  <button className="px-5 py-2.5 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-lg font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-300 flex items-center gap-2">
+                    <PlusIcon />
+                    New Project
+                  </button>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          {/* Main Content */}
+          <main className="max-w-7xl mx-auto px-6 py-8">
+            {/* Tabs */}
+            <div className="flex items-center gap-6 mb-8 border-b border-white/5">
+              <button
+                onClick={() => setActiveTab('projects')}
+                className={`pb-3 px-1 font-semibold transition-all relative ${
+                  activeTab === 'projects' 
+                    ? 'text-white' 
+                    : 'text-gray-500 hover:text-gray-300'
+                }`}
+              >
+                My Projects
+                {activeTab === 'projects' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-cyan-500" />
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab('templates')}
+                className={`pb-3 px-1 font-semibold transition-all relative ${
+                  activeTab === 'templates' 
+                    ? 'text-white' 
+                    : 'text-gray-500 hover:text-gray-300'
+                }`}
+              >
+                Templates
+                {activeTab === 'templates' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-cyan-500" />
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab('renders')}
+                className={`pb-3 px-1 font-semibold transition-all relative ${
+                  activeTab === 'renders' 
+                    ? 'text-white' 
+                    : 'text-gray-500 hover:text-gray-300'
+                }`}
+              >
+                Render Queue
+                {activeTab === 'renders' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-cyan-500" />
+                )}
+              </button>
+            </div>
+
+            {/* Projects View */}
+            {activeTab === 'projects' && (
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold">Recent Projects</h2>
+                  <div className="flex gap-2">
+                    <button className="px-4 py-2 glass rounded-lg hover:bg-white/5 transition-colors text-sm font-medium">
+                      All Status
+                    </button>
+                    <button className="px-4 py-2 glass rounded-lg hover:bg-white/5 transition-colors text-sm font-medium">
+                      Sort: Latest
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {projects.map((project, index) => (
+                    <div
+                      key={project.id}
+                      className="gradient-border rounded-xl overflow-hidden hover-lift cursor-pointer group"
+                      style={{
+                        animationDelay: `${index * 100}ms`
+                      }}
+                    >
+                      <div className="relative h-48 overflow-hidden" style={{ background: project.thumbnail }}>
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
+                          <button className="p-3 bg-white/10 backdrop-blur-sm rounded-full hover:bg-white/20 transition-colors">
+                            <PlayIcon />
+                          </button>
+                          <button className="p-3 bg-white/10 backdrop-blur-sm rounded-full hover:bg-white/20 transition-colors">
+                            <EditIcon />
+                          </button>
+                        </div>
+                        
+                        {project.status === 'rendering' && (
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-semibold text-cyan-400">Rendering...</span>
+                              <span className="text-xs mono">{project.progress}%</span>
+                            </div>
+                            <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full transition-all duration-300"
+                                style={{ width: `${project.progress}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div className="absolute top-3 right-3">
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold backdrop-blur-sm ${
+                            project.status === 'completed' ? 'bg-green-500/20 text-green-400' :
+                            project.status === 'rendering' ? 'bg-cyan-500/20 text-cyan-400' :
+                            'bg-yellow-500/20 text-yellow-400'
+                          }`}>
+                            {project.status}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="p-4 bg-[#0a0a0a]">
+                        <h3 className="font-bold text-lg mb-1 truncate">{project.name}</h3>
+                        <div className="flex items-center justify-between text-sm text-gray-400">
+                          <span className="mono">{project.template}</span>
+                          <span className="mono">{project.duration}</span>
+                        </div>
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
+                          <span className="text-xs text-gray-500">{project.updatedAt}</span>
+                          {project.status === 'completed' && (
+                            <button className="text-xs text-purple-400 hover:text-purple-300 font-semibold flex items-center gap-1">
+                              <DownloadIcon />
+                              Download
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Create New Card */}
+                  <div className="gradient-border rounded-xl overflow-hidden hover-lift cursor-pointer group min-h-[300px] flex items-center justify-center">
+                    <div className="text-center p-8">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-purple-500/20 to-cyan-500/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <PlusIcon />
+                      </div>
+                      <h3 className="font-bold text-lg mb-2">Start New Project</h3>
+                      <p className="text-sm text-gray-400">Choose a template or start from scratch</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Templates View */}
+            {activeTab === 'templates' && (
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold">Template Library</h2>
+                  <div className="flex gap-2">
+                    <input
+                      type="search"
+                      placeholder="Search templates..."
+                      className="px-4 py-2 glass rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/50 w-64"
+                    />
+                  </div>
+                </div>
+
+                {/* Category Filter */}
+                <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
+                  {categories.map(category => (
+                    <button
+                      key={category}
+                      onClick={() => setSelectedCategory(category)}
+                      className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-all ${
+                        selectedCategory === category
+                          ? 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white'
+                          : 'glass hover:bg-white/5 text-gray-400'
+                      }`}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredTemplates.map((template, index) => (
+                    <div
+                      key={template.id}
+                      className="gradient-border rounded-xl overflow-hidden hover-lift cursor-pointer group"
+                    >
+                      <div className="relative h-48 overflow-hidden" style={{ background: template.thumbnail }}>
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                          <button className="px-6 py-3 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-lg font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-300 flex items-center gap-2">
+                            <PlayIcon />
+                            Preview
+                          </button>
+                        </div>
+                        <div className="absolute top-3 right-3">
+                          <span className="px-2 py-1 bg-black/50 backdrop-blur-sm rounded-full text-xs font-semibold mono">
+                            {template.duration}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="p-4 bg-[#0a0a0a]">
+                        <h3 className="font-bold text-lg mb-1">{template.name}</h3>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-400">{template.category}</span>
+                          <button className="text-sm text-purple-400 hover:text-purple-300 font-semibold">
+                            Use Template
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Render Queue View */}
+            {activeTab === 'renders' && (
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold">Render Queue</h2>
+                  <button className="px-4 py-2 glass rounded-lg hover:bg-white/5 transition-colors text-sm font-medium">
+                    Clear Completed
+                  </button>
+                </div>
+
+                <div className="glass rounded-xl p-6 text-center">
+                  <div className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-purple-500/10 to-cyan-500/10 rounded-full flex items-center justify-center">
+                    <TemplateIcon />
+                  </div>
+                  <h3 className="text-xl font-bold mb-2">No renders in queue</h3>
+                  <p className="text-gray-400 mb-6">Start a new render to see it here</p>
+                  <button className="px-6 py-3 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-lg font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-300">
+                    Browse Templates
+                  </button>
+                </div>
+              </div>
+            )}
+          </main>
+
+          {/* Floating Action Button for Mobile */}
+          <button className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full flex items-center justify-center shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 md:hidden animate-float">
+            <PlusIcon />
+          </button>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>

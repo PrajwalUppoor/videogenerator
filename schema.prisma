@@ -1,0 +1,375 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Management
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  name              String?
+  avatar            String?
+  passwordHash      String?
+  
+  // Subscription
+  subscriptionTier  SubscriptionTier @default(FREE)
+  creditsRemaining  Int       @default(5)
+  stripeCustomerId  String?   @unique
+  
+  // Timestamps
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  lastLoginAt       DateTime?
+  
+  // Relations
+  projects          Project[]
+  renders           Render[]
+  assets            Asset[]
+  templates         Template[] @relation("CreatedTemplates")
+  apiKeys           ApiKey[]
+  teamMemberships   TeamMember[]
+  
+  @@index([email])
+  @@index([subscriptionTier])
+}
+
+enum SubscriptionTier {
+  FREE
+  PRO
+  BUSINESS
+  ENTERPRISE
+}
+
+// Team/Workspace Management
+model Team {
+  id                String    @id @default(cuid())
+  name              String
+  slug              String    @unique
+  
+  // Branding
+  logoUrl           String?
+  brandColors       Json?     // { primary: "#xxx", secondary: "#xxx" }
+  defaultFonts      Json?
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  members           TeamMember[]
+  projects          Project[]
+  templates         Template[]
+  
+  @@index([slug])
+}
+
+model TeamMember {
+  id                String    @id @default(cuid())
+  userId            String
+  teamId            String
+  role              TeamRole  @default(MEMBER)
+  
+  joinedAt          DateTime  @default(now())
+  
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team              Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, teamId])
+  @@index([userId])
+  @@index([teamId])
+}
+
+enum TeamRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+// Project Management
+model Project {
+  id                String    @id @default(cuid())
+  userId            String
+  teamId            String?
+  
+  name              String
+  description       String?
+  
+  // Template reference
+  templateId        String?
+  
+  // Composition data (Remotion input props)
+  compositionId     String    // e.g., "social-media-post"
+  compositionData   Json      // All the input props for the composition
+  
+  // Metadata
+  duration          Int?      // in frames
+  fps               Int       @default(30)
+  width             Int       @default(1920)
+  height            Int       @default(1080)
+  
+  // Status
+  status            ProjectStatus @default(DRAFT)
+  
+  // Timestamps
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team              Team?     @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  template          Template? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  renders           Render[]
+  versions          ProjectVersion[]
+  
+  @@index([userId])
+  @@index([teamId])
+  @@index([templateId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum ProjectStatus {
+  DRAFT
+  READY
+  ARCHIVED
+}
+
+// Version history for projects
+model ProjectVersion {
+  id                String    @id @default(cuid())
+  projectId         String
+  versionNumber     Int
+  
+  compositionData   Json
+  
+  createdAt         DateTime  @default(now())
+  createdBy         String?
+  
+  project           Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  @@unique([projectId, versionNumber])
+  @@index([projectId])
+}
+
+// Template Library
+model Template {
+  id                String    @id @default(cuid())
+  name              String
+  description       String?
+  
+  // Categorization
+  category          String
+  tags              String[]
+  
+  // Remotion config
+  compositionId     String    // The registered composition ID
+  componentName     String    // e.g., "SocialMediaPost"
+  
+  // Schema for the composition
+  compositionSchema Json      // JSON Schema for validation
+  defaultProps      Json      // Default values for the composition
+  
+  // Metadata
+  duration          Int       // in frames
+  fps               Int       @default(30)
+  width             Int
+  height            Int
+  
+  // Preview
+  thumbnailUrl      String?
+  previewVideoUrl   String?
+  
+  // Visibility
+  isPublic          Boolean   @default(true)
+  isFeatured        Boolean   @default(false)
+  
+  // Team templates
+  teamId            String?
+  createdBy         String
+  
+  // Timestamps
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  creator           User      @relation("CreatedTemplates", fields: [createdBy], references: [id], onDelete: Cascade)
+  team              Team?     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  projects          Project[]
+  
+  @@index([category])
+  @@index([isPublic, isFeatured])
+  @@index([teamId])
+  @@index([createdBy])
+}
+
+// Render Queue & Results
+model Render {
+  id                String    @id @default(cuid())
+  projectId         String
+  userId            String
+  
+  // Render config
+  compositionId     String
+  inputProps        Json
+  
+  // Output settings
+  codec             String    @default("h264")
+  quality           Int       @default(80)
+  format            String    @default("mp4")
+  resolution        String    // "720p", "1080p", "4K"
+  
+  // Status tracking
+  status            RenderStatus @default(QUEUED)
+  progress          Int       @default(0)
+  
+  // Remote render ID (if using Remotion Lambda)
+  remoteRenderId    String?
+  
+  // Output
+  outputUrl         String?
+  outputSize        Int?      // in bytes
+  
+  // Metadata
+  renderMetadata    Json?     // Additional render details
+  errorMessage      String?
+  
+  // Cost tracking
+  creditsUsed       Int?
+  renderDuration    Int?      // Time taken in seconds
+  
+  // Timestamps
+  createdAt         DateTime  @default(now())
+  startedAt         DateTime?
+  completedAt       DateTime?
+  
+  // Relations
+  project           Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([projectId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum RenderStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+// Asset Library
+model Asset {
+  id                String    @id @default(cuid())
+  userId            String
+  
+  // File details
+  filename          String
+  originalFilename  String
+  mimeType          String
+  size              Int       // in bytes
+  
+  // Storage
+  url               String
+  storageKey        String    @unique
+  
+  // Type
+  type              AssetType
+  
+  // Metadata
+  width             Int?
+  height            Int?
+  duration          Int?      // for video/audio
+  metadata          Json?
+  
+  // Timestamps
+  createdAt         DateTime  @default(now())
+  
+  // Relations
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([type])
+}
+
+enum AssetType {
+  IMAGE
+  VIDEO
+  AUDIO
+  FONT
+  OTHER
+}
+
+// API Access
+model ApiKey {
+  id                String    @id @default(cuid())
+  userId            String
+  
+  name              String
+  key               String    @unique
+  keyHash           String    // Hashed version
+  
+  // Permissions
+  permissions       String[]  // ["read", "write", "render"]
+  
+  // Rate limiting
+  rateLimit         Int       @default(100) // requests per hour
+  
+  // Status
+  isActive          Boolean   @default(true)
+  lastUsedAt        DateTime?
+  
+  // Timestamps
+  createdAt         DateTime  @default(now())
+  expiresAt         DateTime?
+  
+  // Relations
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([keyHash])
+}
+
+// Analytics & Usage
+model RenderUsage {
+  id                String    @id @default(cuid())
+  userId            String
+  
+  date              DateTime  @db.Date
+  
+  // Counts
+  rendersTotal      Int       @default(0)
+  rendersSuccessful Int       @default(0)
+  rendersFailed     Int       @default(0)
+  
+  // Metrics
+  totalDuration     Int       @default(0) // Total seconds of video rendered
+  creditsUsed       Int       @default(0)
+  storageUsed       BigInt    @default(0) // in bytes
+  
+  @@unique([userId, date])
+  @@index([userId, date])
+}
+
+// Webhooks
+model Webhook {
+  id                String    @id @default(cuid())
+  userId            String
+  
+  url               String
+  events            String[]  // ["render.completed", "render.failed"]
+  secret            String
+  
+  isActive          Boolean   @default(true)
+  
+  createdAt         DateTime  @default(now())
+  
+  @@index([userId])
+}

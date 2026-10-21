@@ -1,0 +1,123 @@
+{
+    "title": "Vande Mataram – Lyric Video",
+    "fps": 30,
+    "scenes": [
+        {
+            "type": "image-text",
+            "text": "ವಂದೇ ಮಾತರಂ ಸುಜಲಾಂ ಸುಫಲಾಂ ಮಲಯಜ ಶೀತಲಾಂ",
+            "imageUrl": "https://picsum.photos/seed/india-rivers-fields/1080/1920",
+            "duration": 23
+        },
+        {
+            "type": "image-text",
+            "text": "ಶಶ್ಯ ಶ್ಯಾಮಲಾಂ ಮಾತರಂ ವಂದೇ ಮಾತರಂ",
+            "imageUrl": "https://picsum.photos/seed/green-fields-india/1080/1920",
+            "duration": 9
+        },
+        {
+            "type": "image-text",
+            "text": "ಶುಭ್ರ ಜ್ಯೋತ್ಸ್ನಾ ಪುಲಕಿತ ಯಾಮಿನೀಂ\nಫುಲ್ಲ ಕುಸುಮಿತ ದ್ರುಮದಲ ಶೋಭಿನೀಂ",
+            "imageUrl": "https://picsum.photos/seed/moonlight-flowers/1080/1920",
+            "duration": 18
+        },
+        {
+            "type": "image-text",
+            "text": "ಶುಭ್ರ ಜ್ಯೋತ್ಸ್ನಾ ಪುಲಕಿತ ಯಾಮಿನೀಂ\nಫುಲ್ಲ ಕುಸುಮಿತ ದ್ರುಮದಲ ಶೋಭಿನೀಂ",
+            "imageUrl": "https://picsum.photos/seed/indian-garden-night/1080/1920",
+            "duration": 13
+        },
+        {
+            "type": "image-text",
+            "text": "ಸುಹಾಸಿನೀಂ ಸುಮನೋಹರಾಂ\nಮಾತರಂ ವಂದೇ ಮಾತರಂ",
+            "imageUrl": "https://picsum.photos/seed/bharat-mata-art/1080/1920",
+            "duration": 16
+        },
+        {
+            "type": "text",
+            "text": "ವಂದೇ ಮಾತರಂ",
+            "duration": 3
+        },
+        {
+            "type": "image-text",
+            "text": "ಕೋಟಿ ಕೋಟಿ ಕಂಠ ಕಲಕಲ ನಿನಾದ ಕರೇ\nಕೋಟಿ ಕೋಟಿ ಭುಜೈರ್ಧೃತ ಖರಕರ ವಾಲೇ",
+            "imageUrl": "https://picsum.photos/seed/india-unity-crowd/1080/1920",
+            "duration": 15
+        },
+        {
+            "type": "text",
+            "text": "ಮಾತರಂ",
+            "duration": 4
+        },
+        {
+            "type": "image-text",
+            "text": "ಅಬಲಾ ಕೆನೋ ಮಾಆ ಏತೋ ಬಲೇ\nಬಹುಬಲಧಾರಿಣೀಂ",
+            "imageUrl": "https://picsum.photos/seed/india-strength-symbolic/1080/1920",
+            "duration": 12
+        },
+        {
+            "type": "image-text",
+            "text": "ನಮಾಮಿ ತಾರಿಣೀಂ\nರಿಪುದಲ ವಾರಿಣೀಂ\nಮಾತರಂ ವಂದೇ ಮಾತರಂ",
+            "imageUrl": "https://picsum.photos/seed/india-warrior-art/1080/1920",
+            "duration": 13
+        },
+        {
+            "type": "image-text",
+            "text": "ತುಮಿ ವಿದ್ಯಾ ತುಮಿ ಧರ್ಮ\nತುಮಿ ಹೃದಿ ತುಮಿ ಮರ್ಮ",
+            "imageUrl": "https://picsum.photos/seed/india-gurukul-temple/1080/1920",
+            "duration": 18.7
+        },
+        {
+            "type": "image-text",
+            "text": "ತ್ವಂ ಹಿ ಪ್ರಾಣಾಃ ಶರೀರೇ\nಬಾಹುತೇ ತುಮಿ ಮಾಆ\nಶಕ್ತಿ ಹೃದಯೇ ತುಮಿ ಮಾಆ",
+            "imageUrl": "https://picsum.photos/seed/mother-india-symbolic/1080/1920",
+            "duration": 17.5
+        },
+        {
+            "type": "text",
+            "text": "ವಂದೇ ವಂದೇ ವಂದೇ ಮಾತರಂ\nವಂದೇ ಮಾತರಂ",
+            "duration": 13
+        },
+        {
+            "type": "image-text",
+            "text": "ತ್ವಂ ಹಿ ದುರ್ಗಾ ದಶಪ್ರಹರಣಧಾರಿಣೀ\nಕಮಲಾ ಕಮಲದಲ ವಿಹಾರಿಣೀ",
+            "imageUrl": "https://picsum.photos/seed/durga-lotus-art/1080/1920",
+            "duration": 13
+        },
+        {
+            "type": "image-text",
+            "text": "ವಾಣೀ ವಿದ್ಯಾದಾಯಿನೀ\nನಮಾಮಿ ತ್ವಾಂ\nನಮಾಮಿ ತ್ವಾಂ",
+            "imageUrl": "https://picsum.photos/seed/saraswati-art/1080/1920",
+            "duration": 15
+        },
+        {
+            "type": "text",
+            "text": "ಮಾತರಂ ವಂದೇ ಮಾತರಂ",
+            "duration": 5.4
+        },
+        {
+            "type": "image-text",
+            "text": "ಶ್ಯಾಮಲಾಂ ಸರಲಾಂ\nಸುಸ್ಮಿತಾಂ ಭೂಷಿತಾಂ\nಧರಣೀಂ ಮಾತರಂ",
+            "imageUrl": "https://picsum.photos/seed/india-landscape-serene/1080/1920",
+            "duration": 13.7
+        },
+        {
+            "type": "image-text",
+            "text": "ವಂದೇ ಮಾತರಂ ವಂದೇ ಮಾತರಂ\nಸುಜಲಾಂ ಸುಫಲಾಂ",
+            "imageUrl": "https://picsum.photos/seed/india-agriculture-water/1080/1920",
+            "duration": 14
+        },
+        {
+            "type": "image-text",
+            "text": "ಮಾತರಂ ವಂದೇ ಮಾತರಂ\nವಂದೇ ಮಾತರಂ",
+            "imageUrl": "https://picsum.photos/seed/india-flag-sunrise/1080/1920",
+            "duration": 16.4
+        }
+    ],
+    "theme": {
+        "background": "#0f172a",
+        "textColor": "#ffffff",
+        "fontFamily": "Inter"
+    },
+    "width": 1080,
+    "height": 1920
+}

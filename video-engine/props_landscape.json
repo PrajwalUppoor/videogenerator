@@ -1,0 +1,24 @@
+{
+    "title": "Landscape Test",
+    "fps": 30,
+    "width": 1920,
+    "height": 1080,
+    "scenes": [
+        {
+            "type": "image-text",
+            "text": "This is a landscape view",
+            "imageUrl": "https://picsum.photos/seed/landscape/1920/1080",
+            "duration": 4
+        },
+        {
+            "type": "text",
+            "text": "Beautifully adapted layouts",
+            "duration": 3
+        }
+    ],
+    "theme": {
+        "background": "#020617",
+        "textColor": "#ffffff",
+        "fontFamily": "Inter"
+    }
+}
